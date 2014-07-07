@@ -1,5 +1,5 @@
 // swagger.js
-// version 2.0.26
+// version 2.0.27
 
 var __bind = function(fn, me){
   return function(){
@@ -57,24 +57,24 @@ Object.keys = Object.keys || (function () {
             'constructor'
         ],
         DontEnumsLength = DontEnums.length;
-  
+
     return function (o) {
         if (typeof o != "object" && typeof o != "function" || o === null)
             throw new TypeError("Object.keys called on a non-object");
-     
+
         var result = [];
         for (var name in o) {
             if (hasOwnProperty.call(o, name))
                 result.push(name);
         }
-     
+
         if (hasDontEnumBug) {
             for (var i = 0; i < DontEnumsLength; i++) {
                 if (hasOwnProperty.call(o, DontEnums[i]))
                     result.push(DontEnums[i]);
-            }   
+            }
         }
-     
+
         return result;
     };
 })();
@@ -83,7 +83,7 @@ Object.keys = Object.keys || (function () {
 var SwaggerApi = function(url, options) {
   this.url = null;
   this.debug = false;
-  this.basePath = null;
+  this.basePath = "http://the-upgrade.dev/rest/v1";
   this.authorizations = null;
   this.authorizationScheme = null;
   this.info = null;
@@ -882,6 +882,21 @@ SwaggerOperation.prototype.pathXml = function() {
   return this.path.replace("{format}", "xml");
 };
 
+SwaggerOperation.prototype.encodePathParam = function(pathParam) {
+  var encParts, part, parts, _i, _len;
+  if (pathParam.indexOf("/") === -1) {
+    return encodeURIComponent(pathParam);
+  } else {
+    parts = pathParam.split("/");
+    encParts = [];
+    for (_i = 0, _len = parts.length; _i < _len; _i++) {
+      part = parts[_i];
+      encParts.push(encodeURIComponent(part));
+    }
+    return encParts.join("/");
+  }
+};
+
 SwaggerOperation.prototype.urlify = function(args) {
   var url = this.resource.basePath + this.pathJson();
   var params = this.parameters;
@@ -891,7 +906,7 @@ SwaggerOperation.prototype.urlify = function(args) {
       if(args[param.name]) {
         // apply path params and remove from args
         var reg = new RegExp('\{' + param.name + '[^\}]*\}', 'gi');
-        url = url.replace(reg, encodeURIComponent(args[param.name]));
+        url = url.replace(reg, this.encodePathParam(args[param.name]));
         delete args[param.name];
       }
       else
@@ -1310,6 +1325,10 @@ ShredHttpClient.prototype.execute = function(obj) {
   };
   if (obj) {
     obj.on = res;
+  }
+  if (obj.method.toLowerCase()==="get"&&obj.url.indexOf("api-docs")==-1&&obj.url.indexOf("/api/")!=-1) {
+    console.log("showing the API result in a separate tab/window")
+    window.open(obj.url, "_blank");
   }
   return this.shred.request(obj);
 };

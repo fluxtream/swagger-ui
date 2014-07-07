@@ -47,6 +47,7 @@ class SwaggerUi extends Backbone.Router
 
     @options.url = url
     @headerView.update(url)
+    log @options
     @api = new SwaggerApi(@options)
     @api.build()
     @api

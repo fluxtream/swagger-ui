@@ -62,7 +62,7 @@ class OperationView extends Backbone.View
         sampleJSON: @model.responseSampleJSON
         isParam: false
         signature: @model.responseClassSignature
-        
+
       responseSignatureView = new SignatureView({model: signatureModel, tagName: 'div'})
       $('.model-signature', $(@el)).append responseSignatureView.render().el
     else
@@ -102,7 +102,7 @@ class OperationView extends Backbone.View
     # Render status codes
     statusCodeView = new StatusCodeView({model: statusCode, tagName: 'tr'})
     $('.operation-status', $(@el)).append statusCodeView.render().el
-  
+
   submitOperation: (e) ->
     e?.preventDefault()
     # Check for errors
@@ -133,7 +133,7 @@ class OperationView extends Backbone.View
         if(o.value? && jQuery.trim(o.value).length > 0)
           map["body"] = o.value
 
-      for o in form.find("select") 
+      for o in form.find("select")
         val = this.getSelectedValue o
         if(val? && jQuery.trim(val).length > 0)
           map[o.name] = val
@@ -179,7 +179,7 @@ class OperationView extends Backbone.View
 
     log(bodyParam)
 
-    @invocationUrl = 
+    @invocationUrl =
       if @model.supportHeaderParams()
         headerParams = @model.getHeaderParams(map)
         @model.urlify(map, false)
@@ -188,7 +188,7 @@ class OperationView extends Backbone.View
 
     $(".request_url", $(@el)).html "<pre>" + @invocationUrl + "</pre>"
 
-    obj = 
+    obj =
       type: @model.method
       url: @invocationUrl
       headers: headerParams
@@ -231,12 +231,12 @@ class OperationView extends Backbone.View
     o
 
   getSelectedValue: (select) ->
-    if !select.multiple 
+    if !select.multiple
       select.value
     else
       options = []
       options.push opt.value for opt in select.options when opt.selected
-      if options.length > 0 
+      if options.length > 0
         options.join ","
       else
         null
@@ -250,8 +250,8 @@ class OperationView extends Backbone.View
 
   # Show response from server
   showResponse: (response) ->
-    prettyJson = JSON.stringify(response, null, "\t").replace(/\n/g, "<br>")
-    $(".response_body", $(@el)).html escape(prettyJson)
+   prettyJson = JSON.stringify(response, null, "\t").replace(/\n/g, "<br>")
+   $(".response_body", $(@el)).html escape(prettyJson)
 
   # Show error from server
   showErrorStatus: (data, parent) ->
@@ -272,7 +272,7 @@ class OperationView extends Backbone.View
     lines = xml.split('\n')
     indent = 0
     lastType = 'other'
-    # 4 types of tags - single, closing, opening, other (text, doctype, comment) - 4*4 = 16 transitions 
+    # 4 types of tags - single, closing, opening, other (text, doctype, comment) - 4*4 = 16 transitions
     transitions =
       'single->single': 0
       'single->closing': -1
@@ -316,12 +316,13 @@ class OperationView extends Backbone.View
           formatted = formatted.substr(0, formatted.length - 1) + ln + '\n'
         else
           formatted += padding + ln + '\n'
-      
+
     formatted
-    
+
 
   # puts the response data in UI
   showStatus: (response) ->
+    log response.method;
     if response.content is undefined
       content = response.data
       url = response.url
@@ -333,10 +334,12 @@ class OperationView extends Backbone.View
     # if server is nice, and sends content-type back, we can use it
     contentType = if headers && headers["Content-Type"] then headers["Content-Type"].split(";")[0].trim() else null
 
+    method = response.method.toLowerCase();
+
     if !content
       code = $('<code />').text("no content")
       pre = $('<pre class="json" />').append(code)
-    else if contentType is "application/json" || /\+json$/.test(contentType)
+    else if method != "get" && (contentType is "application/json" || /\+json$/.test(contentType))
       code = $('<code />').text(JSON.stringify(JSON.parse(content), null, "  "))
       pre = $('<pre class="json" />').append(code)
     else if contentType is "application/xml" || /\+xml$/.test(contentType)
@@ -355,12 +358,16 @@ class OperationView extends Backbone.View
     response_body = pre
     $(".request_url", $(@el)).html "<pre>" + url + "</pre>"
     $(".response_code", $(@el)).html "<pre>" + response.status + "</pre>"
-    $(".response_body", $(@el)).html response_body
+    if (method != "get")
+      $(".response_body", $(@el)).html response_body
+    else
+      $(".response_body", $(@el)).html "<pre>" + "response was loaded in a separate tab/window" + "</pre>"
     $(".response_headers", $(@el)).html "<pre>" + JSON.stringify(response.headers, null, "  ").replace(/\n/g, "<br>") + "</pre>"
     $(".response", $(@el)).slideDown()
     $(".response_hider", $(@el)).show()
     $(".response_throbber", $(@el)).hide()
     hljs.highlightBlock($('.response_body', $(@el))[0])
+
 
   toggleOperationContent: ->
     elem = $('#' + Docs.escapeResourceName(@model.parentId) + "_" + @model.nickname + "_content")

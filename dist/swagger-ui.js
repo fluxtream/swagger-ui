@@ -382,7 +382,7 @@ function program14(depth0,data) {
 function program16(depth0,data) {
   
   
-  return "\n          <div style='margin:0;padding:0;display:inline'></div>\n          <h4>Error Status Codes</h4>\n          <table class='fullwidth'>\n            <thead>\n            <tr>\n              <th>HTTP Status Code</th>\n              <th>Reason</th>\n            </tr>\n            </thead>\n            <tbody class=\"operation-status\">\n            \n            </tbody>\n          </table>\n          ";
+  return "\n          <div style='margin:0;padding:0;display:inline'></div>\n          <h4>Error Status Codes</h4>\n          <table class='fullwidth'>\n            <thead>\n            <tr>\n              <th>HTTP Status Code</th>\n              <th>Reason</th>\n            </tr>\n            </thead>\n            <tbody class=\"operation-status\">\n\n            </tbody>\n          </table>\n          ";
   }
 
 function program18(depth0,data) {
@@ -1277,6 +1277,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
       }
       this.options.url = url;
       this.headerView.update(url);
+      log(this.options);
       this.api = new SwaggerApi(this.options);
       this.api.build();
       return this.api;
@@ -1930,7 +1931,8 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
     };
 
     OperationView.prototype.showStatus = function(response) {
-      var code, content, contentType, headers, pre, response_body, url;
+      var code, content, contentType, headers, method, pre, response_body, url;
+      log(response.method);
       if (response.content === void 0) {
         content = response.data;
         url = response.url;
@@ -1940,10 +1942,11 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
       }
       headers = response.headers;
       contentType = headers && headers["Content-Type"] ? headers["Content-Type"].split(";")[0].trim() : null;
+      method = response.method.toLowerCase();
       if (!content) {
         code = $('<code />').text("no content");
         pre = $('<pre class="json" />').append(code);
-      } else if (contentType === "application/json" || /\+json$/.test(contentType)) {
+      } else if (method !== "get" && (contentType === "application/json" || /\+json$/.test(contentType))) {
         code = $('<code />').text(JSON.stringify(JSON.parse(content), null, "  "));
         pre = $('<pre class="json" />').append(code);
       } else if (contentType === "application/xml" || /\+xml$/.test(contentType)) {
@@ -1961,7 +1964,11 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
       response_body = pre;
       $(".request_url", $(this.el)).html("<pre>" + url + "</pre>");
       $(".response_code", $(this.el)).html("<pre>" + response.status + "</pre>");
-      $(".response_body", $(this.el)).html(response_body);
+      if (method !== "get") {
+        $(".response_body", $(this.el)).html(response_body);
+      } else {
+        $(".response_body", $(this.el)).html("<pre>" + "response was loaded in a separate tab/window" + "</pre>");
+      }
       $(".response_headers", $(this.el)).html("<pre>" + JSON.stringify(response.headers, null, "  ").replace(/\n/g, "<br>") + "</pre>");
       $(".response", $(this.el)).slideDown();
       $(".response_hider", $(this.el)).show();
